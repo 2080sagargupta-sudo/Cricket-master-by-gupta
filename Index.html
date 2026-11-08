@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Master by Gupta</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #071b16;
+  color: white;
+}
+
+header {
+  background: #0c3024;
+  text-align: center;
+  padding: 25px 10px;
+  border-bottom: 3px solid #20d486;
+}
+
+header h1 {
+  color: #20d486;
+  margin: 0;
+  font-size: 25px;
+}
+
+header p {
+  margin-bottom: 0;
+  color: #ddd;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 18px;
+}
+
+.card {
+  background: #123329;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 18px;
+}
+
+h2 {
+  color: #20d486;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  margin: 7px 0;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+button {
+  padding: 14px;
+  border: none;
+  border-radius: 9px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.start {
+  width: 100%;
+  background: #20d486;
+  color: #062016;
+  margin-top: 10px;
+}
+
+.score {
+  text-align: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: #20d486;
+}
+
+.details {
+  text-align: center;
+  font-size: 19px;
+  margin: 12px;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.run {
+  background: #e7fff2;
+  color: #073d28;
+}
+
+.four {
+  background: #20d486;
+}
+
+.six {
+  background: #ffc107;
+}
+
+.wicket {
+  background: #ed4545;
+  color: white;
+}
+
+.extra {
+  background: #245c49;
+  color: white;
+}
+
+.undo {
+  background: #ddd;
+  color: #111;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏏 CRICKET MASTER</h1>
+  <p>BY GUPTA | Your Cricket Scoring Partner</p>
+</header>
+
+<div class="container">
+
+<div class="card" id="setup">
+  <h2>🏆 CREATE NEW MATCH</h2>
+
+  <input id="team1" placeholder="Team 1 Name">
+  <input id="team2" placeholder="Team 2 Name">
+
+  <input id="overs" type="number"
+  placeholder="Total Overs" value="20" min="1">
+
+  <button class="start" onclick="startMatch()">
+    START MATCH 🏏
+  </button>
+</div>
+
+<div class="card hidden" id="game">
+
+  <h2 id="matchName">LIVE MATCH</h2>
+
+  <div class="score" id="score">0/0</div>
+
+  <div class="details">
+    Overs: <span id="over">0.0</span>
+  </div>
+
+  <div class="details">
+    Run Rate: <span id="rate">0.00</span>
+  </div>
+
+  <div class="details">
+    Extras: <span id="extras">0</span>
+  </div>
+
+  <h2>ADD RUNS</h2>
+
+  <div class="buttons">
+    <button class="run" onclick="addRun(0)">0</button>
+    <button class="run" onclick="addRun(1)">1</button>
+    <button class="run" onclick="addRun(2)">2</button>
+    <button class="run" onclick="addRun(3)">3</button>
+    <button class="four" onclick="addRun(4)">4</button>
+    <button class="six" onclick="addRun(6)">6</button>
+  </div>
+
+  <h2>EXTRAS & WICKETS</h2>
+
+  <div class="buttons">
+    <button class="wicket" onclick="wicket()">WICKET</button>
+    <button class="extra" onclick="extraRun('Wide')">WIDE</button>
+    <button class="extra" onclick="extraRun('No Ball')">NO BALL</button>
+    <button class="extra" onclick="extraRun('Bye')">BYE</button>
+    <button class="extra" onclick="extraRun('Leg Bye')">LEG BYE</button>
+    <button class="undo" onclick="undo()">UNDO ↩</button>
+  </div>
+
+  <div class="details" id="message">
+    Match Started!
+  </div>
+
+  <button class="start" onclick="resetMatch()">
+    NEW MATCH
+  </button>
+
+</div>
+</div>
+
+<footer>
+  © 2026 Cricket Master by Gupta
+  <br>Made for Cricket Lovers ❤️
+</footer>
+
+<script>
+let runs = 0;
+let wickets = 0;
+let balls = 0;
+let extras = 0;
+let maxOvers = 20;
+let history = [];
+
+function startMatch() {
+  const a = document.getElementById("team1").value.trim();
+  const b = document.getElementById("team2").value.trim();
+  const o = Number(document.getElementById("overs").value);
+
+  if (!a || !b || !Number.isInteger(o) || o < 1) {
+    alert("Enter both team names and valid overs!");
+    return;
+  }
+
+  document.getElementById("matchName").innerText = a + " vs " + b;
+  maxOvers = o;
+
+  document.getElementById("setup").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+
+  update();
+}
+
+function saveHistory() {
+  history.push({
+    runs, wickets, balls, extras
+  });
+}
+
+function addRun(n) {
+  if (finished()) return;
+
+  saveHistory();
+  runs += n;
+  balls++;
+  update();
+}
+
+function wicket() {
+  if (finished() || wickets >= 10) return;
+
+  saveHistory();
+  wickets++;
+  balls++;
+  update();
+}
+
+function extraRun(type) {
+  if (finished()) return;
+
+  saveHistory();
+
+  runs++;
+  extras++;
+
+  if (type === "Bye" || type === "Leg Bye") {
+    balls++;
+  }
+
+  document.getElementById("message").innerText =
+    type + " +1 run";
+
+  update();
+}
+
+function undo() {
+  if (history.length === 0) {
+    alert("Nothing to undo!");
+    return;
+  }
+
+  const old = history.pop();
+
+  runs = old.runs;
+  wickets = old.wickets;
+  balls = old.balls;
+  extras = old.extras;
+
+  document.getElementById("message").innerText =
+    "Last action undone";
+
+  update();
+}
+
+function finished() {
+  if (balls >= maxOvers * 6 || wickets >= 10) {
+    alert("Innings completed!");
+    return true;
+  }
+  return false;
+}
+
+function update() {
+  document.getElementById("score").innerText =
+    runs + "/" + wickets;
+
+  document.getElementById("over").innerText =
+    Math.floor(balls / 6) + "." + (balls % 6);
+
+  let rate = balls === 0 ? 0 : runs / (balls / 6);
+
+  document.getElementById("rate").innerText =
+    rate.toFixed(2);
+
+  document.getElementById("extras").innerText = extras;
+}
+
+function resetMatch() {
+  if (!confirm("Start a new match? Current score will be lost.")) return;
+
+  runs = 0;
+  wickets = 0;
+  balls = 0;
+  extras = 0;
+  history = [];
+
+  document.getElementById("game").classList.add("hidden");
+  document.getElementById("setup").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
